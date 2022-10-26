@@ -10,6 +10,11 @@ disp (' ')
 disp('--- The fit is visually studied ---')
 disp(' ')
 
+p1 = table();
+p1.pNames = IQMparameters(model);
+p2 = p1;
+
+
 %% P1 Fasting intervention
 load('Silfvergren2021_ParamHealthyCalibratedP1');
 
@@ -38,6 +43,7 @@ for i = 1:row
     end
     
     if i == 1
+        p1.fasting = optimizedParamTemp';
         simBest = sim;
     end
     
@@ -56,7 +62,8 @@ end
 MaxP1 = maxG2;
 MinP1 = minG2;
 
-figure('Name', "Glucose fasting participant 1", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(1)
+set(gcf, 'Name', "Glucose fasting participant 1", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0,2,3,4,5,6,7],'FontSize', 70,'fontname','Arial')
@@ -69,7 +76,7 @@ ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([0 2])
 ylim([3 6])
-hold off
+%hold off
 
 %% P2
 load('Silfvergren2021_ParamHealthyCalibratedP2');
@@ -100,6 +107,7 @@ for i = 1:row
     end
     
     if i == 1
+        p2.fasting = optimizedParamTemp';
         simBest = sim;
     end
     
@@ -118,7 +126,8 @@ MaxP2 = maxG2;
 MinP2 = minG2;
 
 %
-figure('Name', "Glucose fasting participant 2", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(2)
+set(gcf, 'Name', "Glucose fasting participant 2", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0,2,3,4,5,6,7],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
@@ -131,12 +140,12 @@ ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([0 2])
 ylim([3 6])
-hold off
+%hold off
 
 %% Meals
 %% fed p1
 load('Silfvergren2021_ParamP1fedCalibrated');
-
+% Silfvergren2021_ParamP1fedCalibrated = Silfvergren2021_ParamHealthyCalibratedp1;
 [row column] = size(Silfvergren2021_ParamP1fedCalibrated);
 clear optimizedParamTemp2
 
@@ -160,6 +169,7 @@ for i = 1:row
     sim = model(time,[],optimizedParamTemp);
     
     if i == 1
+        p1.fed = optimizedParamTemp';
         simBest = sim;
     end
     
@@ -181,7 +191,8 @@ MinP1 = minG2;
 
 
 % Plot p1
-figure('Name', "Glucose fed participant 1", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(3)
+set(gcf, 'Name', "Glucose fed participant 1", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[0,1,2,3,4,5,6,7,8,10],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
@@ -195,7 +206,7 @@ plot((Silfvergren2021_data.time_fed_p1-7680)/60,Silfvergren2021_data.value_fed_p
 line([0 0.05], [3 3],'Color','k','LineWidth',12);
 xlim([-0.1 4])
 ylim([3 6])
-hold off
+%hold off
 
 %% fed p2
 load('Silfvergren2021_ParamP2fedCalibrated');
@@ -219,13 +230,15 @@ Silfvergren2021_ParamP2fedCalibrated = sortrows(optimizedParamTemp2,column);
 
 for i = 1:row
     optimizedParamTemp = Silfvergren2021_ParamP2fedCalibrated(i,1:(column-1));
-    
+    %optimizedParamTemp(104:105) = body_information(end-1:end);
+
     try
         sim = model(time,[],optimizedParamTemp);
     catch error
     end
     
     if i == 1
+        p2.fed = optimizedParamTemp';
         simBest = sim;
     end
     
@@ -246,7 +259,8 @@ MaxP1 = maxG2;
 MinP1 = minG2;
 
 % Plot p2
-figure('Name', "Glucose fed participant 2", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(4)
+set(gcf, 'Name', "Glucose fed participant 2", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[0,1,2,3,4,5,6,7,8,10],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
@@ -260,11 +274,11 @@ plot((Silfvergren2021_data.time_fed_p2-7680)/60,Silfvergren2021_data.value_fed_p
 line([0 0.05], [3 3],'Color','k','LineWidth',12);
 xlim([-0.1 4])
 ylim([3, 6])
-hold off
+%hold off
 
 %% unfed p1
 load('Silfvergren2021_ParamP1unfedCalibrated');
-
+% Silfvergren2021_ParamP1unfedCalibrated(:,1:109) = Silfvergren2021_ParamHealthyCalibratedp1(1:12,1:109);
 [row column] = size(Silfvergren2021_ParamP1unfedCalibrated);
 clear optimizedParamTemp2
 
@@ -291,6 +305,7 @@ for i = 1:row
     end
     
     if i == 1
+                p1.unfed = optimizedParamTemp';
         simBest = sim;
     end
     
@@ -311,7 +326,8 @@ MaxP1 = maxG2;
 MinP1 = minG2;
 
 % Plot p1
-figure('Name', "Glucose unfed participant 1", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(5)
+set(gcf, 'Name', "Glucose unfed participant 1", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[2,4,6],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
@@ -325,7 +341,7 @@ plot((Silfvergren2021_data.time_fastedStart_p1-10560)/60,Silfvergren2021_data.Va
 line([0.2 0.25], [2 2],'Color','k','LineWidth',12);
 xlim([-0.1 4])
 ylim([2, 6])
-hold off
+%hold off
 
 
 %% unfed p2
@@ -349,10 +365,12 @@ Silfvergren2021_ParamP2unfedCalibrated = sortrows(optimizedParamTemp2,column);
 
 for i = 1:row
     optimizedParamTemp = Silfvergren2021_ParamP2unfedCalibrated(i,1:(column-1));
-    
+    %optimizedParamTemp(104:105) = body_information(end-1:end);
+
     sim = model(time,[],optimizedParamTemp);
     
     if i == 1
+        p2.unfed = optimizedParamTemp';
         simBest = sim;
     end
     
@@ -386,27 +404,40 @@ for i = 1:row
         minPT2 = min(minPT2,minPT1);
     end
     
+%     if i == 1
+%         maxaaLiver2 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
+%         minaaLiver2 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
+%     else
+%         maxaaLiver1 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
+%         minaaLiver1 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
+%         maxaaLiver2 = max(maxaaLiver2,maxaaLiver1);
+%         minaaLiver2 = min(minaaLiver2,minaaLiver1);
+%     end
+%     
+%     if i == 1
+%         maxaaTransportation2 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
+%         minaaTransportation2 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
+%     else
+%         maxaaTransportation1 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
+%         minaaTransportation1 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
+%         maxaaTransportation2 = max(maxaaTransportation2,maxaaTransportation1);
+%         minaaTransportation2 = min(minaaTransportation2,minaaTransportation1);
+%     end
+%     
     if i == 1
-        maxaaLiver2 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
-        minaaLiver2 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
+        maxRatio = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'))./sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
+        minRatio = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'))./sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
     else
-        maxaaLiver1 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
-        minaaLiver1 = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'));
-        maxaaLiver2 = max(maxaaLiver2,maxaaLiver1);
-        minaaLiver2 = min(minaaLiver2,minaaLiver1);
+        maxRatioT = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'))./sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
+        minRatioT = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'))./sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
+        maxRatio = max(maxRatio,maxRatioT);
+        minRatio = min(minRatio,minRatioT);
     end
     
+%     minRatio  = minaaLiver2./minaaTransportation2;
+% maxRatio  = maxaaLiver2./maxaaTransportation2;
+
     if i == 1
-        maxaaTransportation2 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
-        minaaTransportation2 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
-    else
-        maxaaTransportation1 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
-        minaaTransportation1 = sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
-        maxaaTransportation2 = max(maxaaTransportation2,maxaaTransportation1);
-        minaaTransportation2 = min(minaaTransportation2,minaaTransportation1);
-    end
-    
-        if i == 1
         maxProteinDigestion2 = sim.reactionvalues(:,ismember(sim.reactions,'ProteinDigestion'));
         minProteinDigestion2 = sim.reactionvalues(:,ismember(sim.reactions,'ProteinDigestion'));
     else
@@ -423,7 +454,8 @@ MaxP1 = maxG2;
 MinP1 = minG2;
 
 % Plot p2
-figure('Name', "Glucose unfed participant 2", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(6)
+set(gcf, 'Name', "Glucose unfed participant 2", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[2,4,6],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
@@ -437,9 +469,10 @@ plot((Silfvergren2021_data.time_fastedStart_p2-10560)/60,Silfvergren2021_data.Va
 line([0.2 0.25], [2 2],'Color','k','LineWidth',12);
 xlim([-0.1 4])
 ylim([2, 6])
-hold off
+%hold off
 
-figure('Name', "GNG unfed p2", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(7)
+set(gcf, 'Name', "GNG unfed p2", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0.2,0.6,1],'FontSize', 65,'fontname','Arial')
@@ -452,9 +485,10 @@ ylabel({'Gluconeogenesis' ; '(mg/kg/min)'},'FontSmoothing','on','fontname','Aria
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([-0.1 2.5])
 ylim([0.2 1])
-hold off
+%hold off
 
-figure('Name', "PyruvateTranslocase", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(8)
+set(gcf, 'Name', "PyruvateTranslocase", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[8,9,10],'FontSize', 65,'fontname','Arial')
@@ -467,14 +501,15 @@ ylabel({'Pyruvate from body' ; 'into liver (ug/kg/min)'},'FontSmoothing','on','f
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([-0.1 2.5])
 ylim([8 10])
-hold off
+%hold off
 
-figure('Name', "digested AA ratio", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(9)
+set(gcf, 'Name', "digested AA ratio", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0,50,100],'FontSize', 55,'fontname','Arial')
-minRatio  = minaaLiver2./minaaTransportation2;
-maxRatio  = maxaaLiver2./maxaaTransportation2;
+% minRatio  = minaaLiver2./minaaTransportation2;
+% maxRatio  = maxaaLiver2./maxaaTransportation2;
 bestRatio = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'))./sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
 yP1    = [minRatio', fliplr(maxRatio')];
 fill(time2(2:end-1)/1440-5.33,yP1(2:end-1)*100,'b','FaceAlpha',0.2,'EdgeAlpha',0);
@@ -485,9 +520,10 @@ ylabel({'Amino acids catabolized' ; 'into TCA or pyruvate (%)'},'FontSmoothing',
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([-0.1 2.5])
 ylim([0 100])
-hold off
+%hold off
 
-figure('Name', "Digestion of protein into AA", 'units', 'normalized', 'outerposition', [0 0 1 1])
+figure(10)
+set(gcf, 'Name', "Digestion of protein into AA", 'units', 'normalized', 'outerposition', [0 0 1 1])
 hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0,1.5,3],'FontSize', 50,'fontname','Arial')
@@ -500,4 +536,4 @@ ylabel({'Release of amino acids from' ; 'ingested protein(mg/kg/min)'},'FontSmoo
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([-0.1 2.5])
 ylim([0 3])
-hold off
+%hold off

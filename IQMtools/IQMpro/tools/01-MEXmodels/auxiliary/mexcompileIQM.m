@@ -18,5 +18,8 @@ else
 end
 includefolder = fileparts(which('mexmathaddon.h'));
 % do compilation
+try
 eval(sprintf('mex -O -I''%s'' %s.c ''%s'';',includefolder,filename,libpath));
 
+catch
+end
