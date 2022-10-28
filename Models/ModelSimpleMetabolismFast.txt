@@ -49,7 +49,6 @@ CrebCycle_L(0)= 50
 
 InsulinStabilization(0) = 0
 It(0)                   = 0
-
 ********** MODEL PARAMETERS
 k_gri = 0.0558
 k_min = 0.008 
@@ -181,8 +180,8 @@ protein_amount2 = 1
 meal_solid2     = 1
 meal_liquid2    = 1
 meal_boolean2   = 1
-D               = 0
-  
+D = 0
+
 ********** MODEL VARIABLES
 VolumeBloodPeripheral_1 = ((0.3669*(Height/100)^3 + 0.03219*BW + 0.6041)*male_boolean + (0.3561*(Height/100)^3 + 0.03308*BW + 0.1833)*female_boolean)*BloodVolumeUncertainty*CountMeal1_1
 VolumeBloodPeripheral_2 = ((0.3669*(Height/100)^3 + 0.03219*BW + 0.6041)*male_boolean + (0.3561*(Height/100)^3 + 0.03308*BW + 0.1833)*female_boolean)*BloodVolumeUncertainty2*CountMeal1_2
@@ -207,6 +206,9 @@ GlyDep_Gluconeogenesis_n       = (GlyDep_Glugoneogenesis/Gly_L)^GlyDepEXP_Glugon
 GlyDep_KidneysEGP_n            = (GlyDep_KidneysEGP/Gly_L)^GlyDepEXP_KidneysEGP
 
 ********** MODEL REACTIONS
+Dvis = D
+meal_boolean1vis = meal_boolean1
+
 Q_sto         = Qsto1 + Qsto2
 aa  = 5/2/(1-b)/D
 cc  = 5/2/d/D
@@ -311,14 +313,13 @@ SteadyStateMealStart    = (meal_start1*CountMeal1_1) + (meal_start1_2*CountMeal1
 SteadyStateMealLength   = (meal_length1*CountMeal1_1)+ (meal_length1_2*CountMeal1_2)  + (meal_length1_3*CountMeal1_3) + (meal_length1_4*CountMeal1_4)
 SteadyStateMeal_AmountC = (meal_amount1C)            + (meal_amount1_2C)              + (meal_amount1_3C)             + meal_amount1_4C
 %---------------------------------------------------------------------------------------%
-
 ********** MODEL FUNCTIONS
 ********** MODEL EVENTS
 meal_all_off=gt(time,0),meal_boolean1,0,meal_boolean2,0
 
 %----------Steady State Meals----------%
 1_meal_turn_on=gt(time,SteadyStateMealStart),meal_boolean1,1
-D_SteadyState =gt(time,SteadyStateMealStart),D,SteadyStateMeal_AmountC
+D_SteadyState =gt(time,SteadyStateMealStart+0.00000),D,SteadyStateMeal_AmountC
 1_meal_turn_off=gt(time,SteadyStateMealStart+SteadyStateMealLength),meal_boolean1,0
 
 2_meal_turn_on=gt(time,SteadyStateMealStart+130),meal_boolean1,1

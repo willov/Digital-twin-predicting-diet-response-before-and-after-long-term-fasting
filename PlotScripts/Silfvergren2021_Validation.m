@@ -2,7 +2,11 @@
 modelName = 'ModelSimpleMetabolismFast';
 model = IQMmodel([modelName '.txt']);
 IQMmakeMEXmodel(model);
-model = str2func(modelName);
+
+modelNameO = 'ModelSimpleMetabolismFastO';
+model = IQMmodel([modelNameO '.txt']);
+IQMmakeMEXmodel(model);
+
 
 time = linspace(0,11500,11501);
 time2 = [time, fliplr(time)];
@@ -14,6 +18,14 @@ p1 = table();
 p1.pNames = IQMparameters(model);
 p2 = p1;
 
+savePlots = 0;
+c = 'r';
+
+if c == 'r'
+    model = str2func(modelNameO);
+else
+    model = str2func(modelName);
+end
 
 %% P1 Fasting intervention
 load('Silfvergren2021_ParamHealthyCalibratedP1');
@@ -68,8 +80,8 @@ hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0,2,3,4,5,6,7],'FontSize', 70,'fontname','Arial')
 yP1    = [MaxP1', fliplr(MinP1')];
-fill(time2/1440-5.33,yP1,'b','FaceAlpha',0.2,'EdgeAlpha',0);
-plot(time/1440-5.33, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,'b-.','LineWidth',LineWidthValue);
+fill(time2/1440-5.33,yP1,c,'FaceAlpha',0.2,'EdgeAlpha',0);
+plot(time/1440-5.33, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,[c '-.'],'LineWidth',LineWidthValue);
 plot(Silfvergren2021_data.time(1:3)/1440-5.33,Silfvergren2021_data.p1_glucoseCalibrated(1:3),'kx','MarkerSize',80,'LineWidth',10)
 plot(Silfvergren2021_data.time(1:190)/1440-5.33,Silfvergren2021_data.p1_glucoseCalibrated(1:190),'k.','MarkerSize',80)
 ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
@@ -78,7 +90,7 @@ xlim([0 2])
 ylim([3 6])
 %hold off
 
-%% P2
+%% P2 fasted
 load('Silfvergren2021_ParamHealthyCalibratedP2');
 
 [row column] = size(Silfvergren2021_ParamHealthyCalibratedp2);
@@ -108,6 +120,16 @@ for i = 1:row
     
     if i == 1
         p2.fasting = optimizedParamTemp';
+
+        reactions = array2table(sim.reactionvalues, 'variablenames',sim.reactions);
+        variables = array2table(sim.variablevalues, 'variablenames',sim.variables);
+        states = array2table(sim.statevalues, 'variablenames',sim.states);
+        sim_obj_fasted = struct();
+        sim_obj_fasted.parameters = p2;
+        sim_obj_fasted.reactions = reactions;
+        sim_obj_fasted.variables = variables;
+        sim_obj_fasted.states = states;
+        sim_obj_fasted.time = sim.time';
         simBest = sim;
     end
     
@@ -132,8 +154,8 @@ hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0,2,3,4,5,6,7],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
 yP2    = [MaxP2', fliplr(MinP2')];
-fill(time2/1440-5.33,yP2,'b','FaceAlpha',0.2,'EdgeAlpha',0);
-plot(time/1440-5.33, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,'b-.','LineWidth',LineWidthValue);
+fill(time2/1440-5.33,yP2,c,'FaceAlpha',0.2,'EdgeAlpha',0);
+plot(time/1440-5.33, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,[c '-.'],'LineWidth',LineWidthValue);
 plot(Silfvergren2021_data.time(2:4)/1440-5.33,Silfvergren2021_data.p2_glucose(2:4),'kx','MarkerSize',80,'LineWidth',10)
 plot(Silfvergren2021_data.time(2:190)/1440-5.33,Silfvergren2021_data.p2_glucose(2:190),'k.','MarkerSize',80)
 ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
@@ -197,8 +219,8 @@ hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[0,1,2,3,4,5,6,7,8,10],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
 yP1 = [MaxP1', fliplr(MinP1')];
-fill((time2-7680)/60,yP1,'b','FaceAlpha',0.2,'EdgeAlpha',0);
-plot((time-7680)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,'b-.','LineWidth',LineWidthValue);
+fill((time2-7680)/60,yP1,c,'FaceAlpha',0.2,'EdgeAlpha',0);
+plot((time-7680)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,[c '-.'],'LineWidth',LineWidthValue);
 xlabel("Time (h)",'FontSmoothing','on','fontname','Arial');
 ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
 plot((Silfvergren2021_data.time_fed_p1(1:2)-7680)/60,Silfvergren2021_data.value_fed_p1(1:2),'kx','MarkerSize',80,'LineWidth',10)
@@ -230,15 +252,28 @@ Silfvergren2021_ParamP2fedCalibrated = sortrows(optimizedParamTemp2,column);
 
 for i = 1:row
     optimizedParamTemp = Silfvergren2021_ParamP2fedCalibrated(i,1:(column-1));
-    %optimizedParamTemp(104:105) = body_information(end-1:end);
-
+    if c == 'r'
+        optimizedParamTemp(102:105) = body_information;
+    end
     try
         sim = model(time,[],optimizedParamTemp);
     catch error
+        disp(getReport(err))
     end
     
     if i == 1
         p2.fed = optimizedParamTemp';
+
+        reactions = array2table(sim.reactionvalues, 'variablenames',sim.reactions);
+        variables = array2table(sim.variablevalues, 'variablenames',sim.variables);
+        states = array2table(sim.statevalues, 'variablenames',sim.states);
+        sim_obj_fed = struct();
+        sim_obj_fed.parameters = p2;
+        sim_obj_fed.reactions = reactions;
+        sim_obj_fed.variables = variables;
+        sim_obj_fed.states = states;
+        sim_obj_fed.time = sim.time';
+
         simBest = sim;
     end
     
@@ -265,8 +300,8 @@ hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[0,1,2,3,4,5,6,7,8,10],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
 yP1    = [MaxP1', fliplr(MinP1')];
-fill((time2-7680)/60,yP1,'b','FaceAlpha',0.2,'EdgeAlpha',0);
-plot((time-7680)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,'b-.','LineWidth',LineWidthValue);
+fill((time2-7680)/60,yP1,c,'FaceAlpha',0.2,'EdgeAlpha',0);
+plot((time-7680)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,[c '-.'],'LineWidth',LineWidthValue);
 xlabel("Time (h)",'FontSmoothing','on','fontname','Arial');
 ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
 plot((Silfvergren2021_data.time_fed_p2(1:2)-7680)/60,Silfvergren2021_data.value_fed_p2(1:2),'kx','MarkerSize',80,'LineWidth',10)
@@ -332,8 +367,8 @@ hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[2,4,6],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
 yP1    = [MaxP1', fliplr(MinP1')];
-fill((time2-10560)/60,yP1,'b','FaceAlpha',0.2,'EdgeAlpha',0);
-plot((time-10560)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,'b-.','LineWidth',LineWidthValue);
+fill((time2-10560)/60,yP1,c,'FaceAlpha',0.2,'EdgeAlpha',0);
+plot((time-10560)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,[c '-.'],'LineWidth',LineWidthValue);
 xlabel("Time (h)",'FontSmoothing','on','fontname','Arial');
 ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
 plot((Silfvergren2021_data.time_fastedStart_p1(1:2)-10560)/60,Silfvergren2021_data.Value_fasted_p1(1:2),'kx','MarkerSize',80,'LineWidth',10)
@@ -365,12 +400,25 @@ Silfvergren2021_ParamP2unfedCalibrated = sortrows(optimizedParamTemp2,column);
 
 for i = 1:row
     optimizedParamTemp = Silfvergren2021_ParamP2unfedCalibrated(i,1:(column-1));
-    %optimizedParamTemp(104:105) = body_information(end-1:end);
+    if c == 'r'
+        optimizedParamTemp(102:105) = body_information;
+    end
 
     sim = model(time,[],optimizedParamTemp);
     
     if i == 1
         p2.unfed = optimizedParamTemp';
+
+        reactions = array2table(sim.reactionvalues, 'variablenames',sim.reactions);
+        variables = array2table(sim.variablevalues, 'variablenames',sim.variables);
+        states = array2table(sim.statevalues, 'variablenames',sim.states);
+        sim_obj_unfed = struct();
+        sim_obj_unfed.parameters = p2;
+        sim_obj_unfed.reactions = reactions;
+        sim_obj_unfed.variables = variables;
+        sim_obj_unfed.states = states;
+        sim_obj_unfed.time = sim.time';
+
         simBest = sim;
     end
     
@@ -460,8 +508,8 @@ hold on
 a = gca;
 set(a,'xtick',[0,2,4,5,6],'ytick',[2,4,6],'FontSize', 70,'fontname','Arial')%,'FontSmoothing','on')
 yP1    = [MaxP1', fliplr(MinP1')];
-fill((time2-10560)/60,yP1,'b','FaceAlpha',0.2,'EdgeAlpha',0);
-plot((time-10560)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,'b-.','LineWidth',LineWidthValue);
+fill((time2-10560)/60,yP1,c,'FaceAlpha',0.2,'EdgeAlpha',0);
+plot((time-10560)/60, simBest.variablevalues(:,ismember(simBest.variables,'G'))/18,[c '-.'],'LineWidth',LineWidthValue);
 xlabel("Time (h)",'FontSmoothing','on','fontname','Arial');
 ylabel({'Plasma glucose' ; '(mM)'},'FontSmoothing','on','fontname','Arial');
 plot((Silfvergren2021_data.time_fastedStart_p2(1:2)-10560)/60,Silfvergren2021_data.Value_fasted_p2(1:2),'kx','MarkerSize',80,'LineWidth',10)
@@ -477,10 +525,10 @@ hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0.2,0.6,1],'FontSize', 65,'fontname','Arial')
 yP1    = [minGNG2', fliplr(maxGNG2')];
-fill(time2/1440-5.33,yP1,'b','FaceAlpha',0.2,'EdgeAlpha',0);
+fill(time2/1440-5.33,yP1,c,'FaceAlpha',0.2,'EdgeAlpha',0);
 line([0 0.05], [0.2 0.2],'Color','k','LineWidth',12);
 line([2 2.05], [0.2 0.2],'Color','k','LineWidth',12);
-plot(time/1440-5.33, simBest.reactionvalues(:,ismember(simBest.reactions,'Gluconeogenesis')),'b-.','LineWidth',LineWidthValue);
+plot(time/1440-5.33, simBest.reactionvalues(:,ismember(simBest.reactions,'Gluconeogenesis')),[c '-.'],'LineWidth',LineWidthValue);
 ylabel({'Gluconeogenesis' ; '(mg/kg/min)'},'FontSmoothing','on','fontname','Arial');
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([-0.1 2.5])
@@ -493,10 +541,10 @@ hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[8,9,10],'FontSize', 65,'fontname','Arial')
 yP1    = [maxPT2', fliplr(minPT2')];
-fill(time2/1440-5.33,yP1*1000,'b','FaceAlpha',0.2,'EdgeAlpha',0);
+fill(time2/1440-5.33,yP1*1000,c,'FaceAlpha',0.2,'EdgeAlpha',0);
 line([0 0.05], [8 8],'Color','k','LineWidth',12);
 line([2 2.05], [8 8],'Color','k','LineWidth',12);
-plot(time/1440-5.33, simBest.reactionvalues(:,ismember(simBest.reactions,'PyruvateTranslocase'))*1000,'b-.','LineWidth',LineWidthValue);
+plot(time/1440-5.33, simBest.reactionvalues(:,ismember(simBest.reactions,'PyruvateTranslocase'))*1000,[c '-.'],'LineWidth',LineWidthValue);
 ylabel({'Pyruvate from body' ; 'into liver (ug/kg/min)'},'FontSmoothing','on','fontname','Arial');
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([-0.1 2.5])
@@ -512,8 +560,8 @@ set(a,'xtick',[0,1,2],'ytick',[0,50,100],'FontSize', 55,'fontname','Arial')
 % maxRatio  = maxaaLiver2./maxaaTransportation2;
 bestRatio = sim.reactionvalues(:,ismember(sim.reactions,'aaIntoLiver_Meal'))./sim.reactionvalues(:,ismember(sim.reactions,'aaTransportation'));
 yP1    = [minRatio', fliplr(maxRatio')];
-fill(time2(2:end-1)/1440-5.33,yP1(2:end-1)*100,'b','FaceAlpha',0.2,'EdgeAlpha',0);
-plot(time(2:end-1)/1440-5.33, bestRatio(2:end-1)*100,'b-.','LineWidth',LineWidthValue);
+fill(time2(2:end-1)/1440-5.33,yP1(2:end-1)*100,c,'FaceAlpha',0.2,'EdgeAlpha',0);
+plot(time(2:end-1)/1440-5.33, bestRatio(2:end-1)*100,[c '-.'],'LineWidth',LineWidthValue);
 line([0 0.05], [0 0],'Color','k','LineWidth',12);
 line([2 2.05], [0 0],'Color','k','LineWidth',12);
 ylabel({'Amino acids catabolized' ; 'into TCA or pyruvate (%)'},'FontSmoothing','on','fontname','Arial');
@@ -528,12 +576,22 @@ hold on
 a = gca;
 set(a,'xtick',[0,1,2],'ytick',[0,1.5,3],'FontSize', 50,'fontname','Arial')
 yP1    = [maxProteinDigestion2', fliplr(minProteinDigestion2')];
-fill(time2/1440-5.33,yP1,'b','FaceAlpha',0.2,'EdgeAlpha',0);
+fill(time2/1440-5.33,yP1,c,'FaceAlpha',0.2,'EdgeAlpha',0);
 line([0 0.05], [0 0],'Color','k','LineWidth',12);
 line([2 2.05], [0 0],'Color','k','LineWidth',12);
-plot(time/1440-5.33, sim.reactionvalues(:,ismember(sim.reactions,'ProteinDigestion')),'b-.','LineWidth',LineWidthValue);
+plot(time/1440-5.33, sim.reactionvalues(:,ismember(sim.reactions,'ProteinDigestion')),[c '-.'],'LineWidth',LineWidthValue);
 ylabel({'Release of amino acids from' ; 'ingested protein(mg/kg/min)'},'FontSmoothing','on','fontname','Arial');
 xlabel("Time (days)",'FontSmoothing','on','fontname','Arial');
 xlim([-0.1 2.5])
 ylim([0 3])
 %hold off
+
+if savePlots
+    for i = 1:10
+        figure(i)
+        figname = get(gcf,'name');
+        savefig([num2str(i) '-' figname '.fig'])
+        exportgraphics(figure(i), [num2str(i) '-' figname '.png'])
+        exportgraphics(figure(i), [num2str(i) '-' figname '.pdf'])
+    end
+end
